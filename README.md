@@ -18,7 +18,7 @@ ResumeMatch AI is a modern, AI-powered web application that analyzes how well a 
 ## 🛠️ Technology Stack
 
 * **Frontend**: HTML5 (Semantic Structure), Custom Vanilla CSS3 (Glassmorphic Design, Animations), Vanilla JavaScript (File Handling, Dynamic SVG animations).
-* **Backend**: Python 3.12, Flask (Web Server & Routing), Flask-CORS.
+* **Backend**: Python 3.12, FastAPI (Async Web Framework), Uvicorn.
 * **AI/LLM Orchestration**: LangChain, `langchain-google-genai` (integration with Gemini 2.5/2.0 Flash models).
 * **Document Parsing**: `pypdf`, `python-docx`.
 
@@ -35,7 +35,7 @@ resume-ats-score-check/
 │       └── main.js       # File dropzone and api rendering logic
 ├── .env                  # Server-side API key configuration (git-ignored)
 ├── .gitignore            # Git rules to prevent uploading keys/caches
-├── app.py                # Flask entry point and api routes
+├── app.py                # FastAPI server entry point and API endpoints
 ├── analyzer.py           # Document parsing & Gemini LangChain logic
 ├── requirements.txt      # Python dependencies list
 ├── test_backend.py       # Offline verification script for text extraction
@@ -67,7 +67,7 @@ FLASK_ENV=development
 *(You can get a free API key from [Google AI Studio](https://aistudio.google.com/))*
 
 ### 4. Run the Server
-Launch the backend Flask application:
+Launch the backend FastAPI application:
 ```bash
 python app.py
 ```
