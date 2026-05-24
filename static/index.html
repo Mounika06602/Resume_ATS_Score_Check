@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Resume Match AI is a premium ATS score simulator and keyword optimizer. Scan your resume against any job description using Gemini AI.">
+    <title>Resume Match AI - Premium ATS Analyzer & Score Simulator</title>
+    <!-- Google Fonts: Outfit for titles and Inter for body text -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="shortcut icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236366f1'%3E%3Cpath d='M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z'/%3E%3C/svg%3E">
+</head>
+<body>
+    <div class="app-background"></div>
+    
+    <header class="app-header">
+        <div class="header-container">
+            <div class="logo-area">
+                <svg class="logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                </svg>
+                <h1>ResumeMatch <span>AI</span></h1>
+            </div>
+            <p class="tagline">Sleek. AI-Powered. ATS Intelligence.</p>
+        </div>
+    </header>
+
+    <main class="app-container">
+        <!-- Input section -->
+        <section class="control-panel glass-card">
+            <h2 class="panel-title">Analyze Your Resume</h2>
+            <p class="panel-subtitle">Upload your resume (PDF/DOCX) and paste the target Job Description below.</p>
+            
+            <form id="ats-form" onsubmit="return false;">
+
+
+                <!-- Resume File Upload Dropzone -->
+                <div class="form-group">
+                    <label class="field-label">Resume Document</label>
+                    <div id="drop-zone" class="drop-zone">
+                        <input type="file" id="resume-file" accept=".pdf,.docx,.txt" class="file-input">
+                        <div class="drop-zone-content">
+                            <div class="upload-icon-container">
+                                <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                            </div>
+                            <p class="upload-prompt">Drag & drop your resume file here or <span class="browse-link">browse</span></p>
+                            <p class="upload-limits">Supports PDF, DOCX, TXT (Max 5MB)</p>
+                        </div>
+                        <div id="file-details" class="file-details hidden">
+                            <svg class="doc-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                            <div class="file-info">
+                                <span id="file-name" class="file-name">filename.pdf</span>
+                                <span id="file-size" class="file-size">124 KB</span>
+                            </div>
+                            <button type="button" id="remove-file" class="remove-btn" aria-label="Remove uploaded file">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Job Description Input -->
+                <div class="form-group">
+                    <div class="label-header">
+                        <label for="jd-text" class="field-label">Job Description (JD)</label>
+                        <button type="button" id="clear-jd" class="btn-text-link">Clear Text</button>
+                    </div>
+                    <textarea id="jd-text" class="text-input" placeholder="Paste the target job description requirements, responsibilities, and skills here..." rows="8"></textarea>
+                </div>
+
+                <!-- Action Button -->
+                <button type="button" id="analyze-btn" class="btn-primary">
+                    <span class="btn-text">Analyze Fit</span>
+                    <span class="btn-loader hidden">
+                        <svg class="spinner" viewBox="0 0 50 50">
+                            <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
+                        </svg>
+                        Analyzing...
+                    </span>
+                </button>
+            </form>
+        </section>
+
+        <!-- Results section -->
+        <section class="results-panel">
+            <!-- Empty State -->
+            <div id="results-empty" class="results-empty glass-card">
+                <div class="empty-icon-container">
+                    <svg class="empty-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                        <path d="M8 14h.01"></path>
+                        <path d="M12 14h.01"></path>
+                        <path d="M16 14h.01"></path>
+                        <path d="M8 18h.01"></path>
+                        <path d="M12 18h.01"></path>
+                        <path d="M16 18h.01"></path>
+                    </svg>
+                </div>
+                <h3>System Ready for Scanning</h3>
+                <p>Upload a resume and enter a job description to trigger the ATS scoring simulation and receive recommendations.</p>
+            </div>
+
+            <!-- Loading State -->
+            <div id="results-loading" class="results-loading glass-card hidden">
+                <div class="scanner-container">
+                    <div class="scan-bar"></div>
+                    <div class="scan-document">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                        </svg>
+                    </div>
+                </div>
+                <h3 id="loader-title">Scanning Document</h3>
+                <p id="loader-text">Extracting keywords and benchmarking against ATS criteria...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="results-error" class="results-error glass-card hidden">
+                <div class="error-icon-container">
+                    <svg class="error-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                </div>
+                <h3>Analysis Failed</h3>
+                <p id="error-message">An error occurred while communicating with the AI model. Check your API key and network connection.</p>
+                <button type="button" id="retry-btn" class="btn-secondary">Dismiss</button>
+            </div>
+
+            <!-- Analysis Output -->
+            <div id="results-content" class="results-content hidden">
+                <!-- Top Overview Block -->
+                <div class="overview-grid">
+                    <!-- Gauge Score -->
+                    <div class="score-card glass-card">
+                        <h3 class="card-title">Overall Match Score</h3>
+                        <div class="score-container">
+                            <svg class="gauge" viewBox="0 0 100 100">
+                                <circle class="gauge-bg" cx="50" cy="50" r="40"></circle>
+                                <circle id="gauge-fill" class="gauge-fill" cx="50" cy="50" r="40" stroke-dasharray="251.2" stroke-dashoffset="251.2"></circle>
+                            </svg>
+                            <div class="score-value">
+                                <span id="match-pct">0</span><span class="percent-sign">%</span>
+                            </div>
+                        </div>
+                        <p id="score-label" class="score-label">Calculating...</p>
+                    </div>
+
+                    <!-- Breakdown Factors -->
+                    <div class="factors-card glass-card">
+                        <h3 class="card-title">Simulated ATS Breakdown</h3>
+                        <div id="factors-list" class="factors-list">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Keyword Matching Blocks -->
+                <div class="keywords-grid">
+                    <!-- Matching Skills -->
+                    <div class="keywords-card glass-card success-card">
+                        <div class="card-header">
+                            <span class="icon-circle success-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            </span>
+                            <h3 class="card-title">Matching Skills</h3>
+                        </div>
+                        <p class="card-description">These keywords were found in both your resume and the job description.</p>
+                        <div id="matching-pills" class="pills-container">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Missing Skills -->
+                    <div class="keywords-card glass-card warning-card">
+                        <div class="card-header">
+                            <span class="icon-circle warning-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            </span>
+                            <h3 class="card-title">Missing / Weak Skills</h3>
+                        </div>
+                        <p class="card-description">Important skills in the job description that might be missing or weak in your resume.</p>
+                        <div id="missing-pills" class="pills-container">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recommendation Summary -->
+                <div class="summary-card glass-card">
+                    <h3 class="card-title">AI Recommendation Summary</h3>
+                    <p id="recommendation-summary-text" class="summary-text">
+                        <!-- Populated dynamically -->
+                    </p>
+                </div>
+
+                <!-- Actionable Suggestions -->
+                <div class="suggestions-card glass-card">
+                    <h3 class="card-title">Actionable Improvement Checklist</h3>
+                    <p class="card-description">Implement these structural and semantic fixes to optimize your score.</p>
+                    <ul id="suggestions-list" class="checklist">
+                        <!-- Populated dynamically -->
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <p>&copy; 2026 ResumeMatch AI. Built with Flask, LangChain & Gemini. Local & Secure.</p>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
