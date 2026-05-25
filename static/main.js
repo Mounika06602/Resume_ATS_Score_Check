@@ -197,9 +197,9 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('jd', jd);
         
         try {
-            const apiBase = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port === '5000'
+            const apiBase = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port === '8000'
                 ? ''
-                : 'http://localhost:5000';
+                : 'http://localhost:8000';
             const response = await fetch(`${apiBase}/api/analyze`, {
                 method: 'POST',
                 body: formData

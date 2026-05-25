@@ -31,12 +31,14 @@ resume-ats-score-check/
 ├── static/
 │   ├── index.html        # Main dashboard UI
 │   ├── style.css         # Custom premium dark styling
-│   └── js/
-│       └── main.js       # File dropzone and api rendering logic
+│   └── main.js           # File dropzone and api rendering logic
 ├── .env                  # Server-side API key configuration (git-ignored)
 ├── .gitignore            # Git rules to prevent uploading keys/caches
-├── app.py                # FastAPI server entry point and API endpoints
-├── analyzer.py           # Document parsing & Gemini LangChain logic
+├── app/                  # Application modular package
+│   ├── main.py           # FastAPI config, static serving, and entry runner
+│   ├── analyzer.py       # Document parsing & Gemini LangChain logic
+│   └── api/
+│       └── routes.py     # API HTTP routes
 ├── requirements.txt      # Python dependencies list
 └── README.md             # Project documentation (this file)
 ```
@@ -58,22 +60,22 @@ pip install -r requirements.txt
 Create a `.env` file in the root directory (a template is provided) and paste your Google Gemini API Key:
 ```env
 GEMINI_API_KEY=AIzaSyYourGeminiApiKeyHere
-PORT=5000
+PORT=8000
 ```
 *(You can get a free API key from [Google AI Studio](https://aistudio.google.com/))*
 
 ### 4. Run the Server
 Launch the backend FastAPI application:
 ```bash
-python app.py
+python app/main.py
 ```
-The server will start on **`http://127.0.0.1:5000`**.
+The server will start on **`http://127.0.0.1:8000`**.
 
 ---
 
 ## 🧪 Verification & Usage
 
-1. Open **`http://127.0.0.1:5000`** in your browser.
+1. Open **`http://127.0.0.1:8000`** in your browser.
 2. Drag and drop any PDF, DOCX, or TXT resume file into the document upload zone.
 3. Paste the target job description requirements into the Job Description box.
 4. Click **Analyze Fit** to run the ATS score simulation and receive recommendations.

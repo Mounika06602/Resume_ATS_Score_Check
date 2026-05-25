@@ -1,3 +1,11 @@
+"""
+Resume parsing and AI evaluation engine using LangChain and Google Gemini.
+
+This module provides utility functions for extracting text from multiple document formats
+(PDF, DOCX, TXT) and handles the semantic analysis chain that benchmarks
+resume content against a target job description.
+"""
+
 import os
 import pypdf
 import docx
@@ -9,6 +17,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 
 class ResumeAnalysis(BaseModel):
+    """Pydantic schema representing the structured evaluation output of the ATS analysis."""
     match_percentage: int = Field(description="Percentage match between resume and job description (0 to 100)")
     matching_skills: List[str] = Field(description="Key skills and keywords present in both the resume and the job description")
     missing_skills: List[str] = Field(description="Important skills, keywords, or requirements mentioned in the job description but missing or weak in the resume")
@@ -17,10 +26,11 @@ class ResumeAnalysis(BaseModel):
     recommendation_summary: str = Field(description="A concise summary evaluation of the candidate's fit and general recommendation")
 
 def extract_text_from_pdf(file_stream) -> str:
-    """Extract text from a PDF file stream."""
+    """Extract plain text from an in-memory PDF file stream."""
     try:
         reader = pypdf.PdfReader(file_stream)
         text = ""
+        # Iterate over all pages and merge text blocks
         for page in reader.pages:
             page_text = page.extract_text()
             if page_text:
@@ -30,16 +40,16 @@ def extract_text_from_pdf(file_stream) -> str:
         raise ValueError(f"Error extracting text from PDF: {str(e)}")
 
 def extract_text_from_docx(file_stream) -> str:
-    """Extract text from a DOCX file stream."""
+    """Extract plain text from an in-memory DOCX file stream including tables."""
     try:
         doc = docx.Document(file_stream)
         text = ""
         
-        # Extract paragraph text
+        # 1. Extract text content from paragraphs
         for para in doc.paragraphs:
             text += para.text + "\n"
             
-        # Extract table text
+        # 2. Extract text content from tables
         for table in doc.tables:
             for row in table.rows:
                 row_text = [cell.text.strip() for cell in row.cells if cell.text]
@@ -51,7 +61,7 @@ def extract_text_from_docx(file_stream) -> str:
         raise ValueError(f"Error extracting text from DOCX: {str(e)}")
 
 def extract_text(file_stream, filename: str) -> str:
-    """Extract text based on file extension."""
+    """Detect extension and route file stream to correct parser."""
     ext = os.path.splitext(filename)[1].lower()
     
     if ext == '.pdf':
@@ -60,6 +70,7 @@ def extract_text(file_stream, filename: str) -> str:
         return extract_text_from_docx(file_stream)
     elif ext in ['.txt', '.md']:
         try:
+            # Read plain text files directly by decoding the byte content
             return file_stream.read().decode('utf-8', errors='ignore')
         except Exception as e:
             raise ValueError(f"Error reading text file: {str(e)}")
@@ -71,15 +82,16 @@ def analyze_resume_vs_jd(resume_text: str, jd_text: str, api_key: str = None) ->
     Compare the resume and job description using Gemini and LangChain.
     Returns a dictionary matching the ResumeAnalysis schema.
     """
-    # Dynamically reload environment variables on request
+    # Force reload variables to capture updates from the web runtime
     load_dotenv(override=True)
     
-    # Fallback to env variable if key is not passed
+    # Identify the API Key to use (custom key input override vs environment variable)
     actual_api_key = api_key or os.environ.get("GEMINI_API_KEY")
     
     if not actual_api_key:
         raise ValueError("Google Gemini API Key is missing. Please set GEMINI_API_KEY environment variable or provide it in the web interface.")
         
+    # Cascade list of fallback models in case the user has deprecated legacy model definitions in their sandbox
     models_to_try = [
         "gemini-2.5-flash",
         "gemini-2.0-flash",
@@ -87,8 +99,10 @@ def analyze_resume_vs_jd(resume_text: str, jd_text: str, api_key: str = None) ->
         "gemini-1.5-pro"
     ]
     
+    # Instantiate the JSON output parser mapped directly to the Pydantic schema
     parser = JsonOutputParser(pydantic_object=ResumeAnalysis)
     
+    # Setup the prompt instruct template
     prompt = ChatPromptTemplate.from_template(
         "You are an expert ATS (Applicant Tracking System) reviewer and hiring manager.\n"
         "Analyze the candidate's Resume against the provided Job Description (JD).\n"
@@ -105,6 +119,7 @@ def analyze_resume_vs_jd(resume_text: str, jd_text: str, api_key: str = None) ->
     )
     
     last_error = None
+    # Run the model cascading fallback loop
     for model_name in models_to_try:
         try:
             print(f"Attempting analysis using model: {model_name}")
@@ -114,6 +129,7 @@ def analyze_resume_vs_jd(resume_text: str, jd_text: str, api_key: str = None) ->
                 temperature=0.1
             )
             
+            # Chain configuration: Prompt -> LLM -> JSON Parser
             chain = prompt | llm | parser
             
             result = chain.invoke({
@@ -128,11 +144,11 @@ def analyze_resume_vs_jd(resume_text: str, jd_text: str, api_key: str = None) ->
             print(f"Model {model_name} failed with error: {error_str}")
             last_error = e
             
-            # If the model is not found, deprecated, or not supported, try the next one in the list
+            # If the specific model variant isn't supported or not found in their account tier, move to the next model
             if "not found" in error_str.lower() or "404" in error_str.lower() or "not supported" in error_str.lower():
                 continue
             else:
-                # For auth, billing, or rate limits, fail immediately to inform the user
+                # Fail immediately for authorization/billing/quota errors to notify the user
                 raise RuntimeError(f"Error during AI analysis ({model_name}): {error_str}")
                 
     raise RuntimeError(f"All attempted Gemini models failed. Last error: {str(last_error)}")
