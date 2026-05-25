@@ -6,7 +6,7 @@ the POST request containing the resume file upload and job description requireme
 """
 
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, status
-from app import analyzer
+from app.services import analyzer
 
 # Instantiate the modular router
 router = APIRouter()

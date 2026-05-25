@@ -14,8 +14,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 
 # Import document parsers
-from app import pdf_parser
-from app import docx_parser
+from app.services import pdf_parser
+from app.services import docx_parser
 
 class ResumeAnalysis(BaseModel):
     """Pydantic schema representing the structured evaluation output of the ATS analysis."""
