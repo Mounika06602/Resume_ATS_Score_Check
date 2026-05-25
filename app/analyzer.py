@@ -57,12 +57,16 @@ def analyze_resume_vs_jd(resume_text: str, jd_text: str, api_key: str = None) ->
     if not actual_api_key:
         raise ValueError("Google Gemini API Key is missing. Please set GEMINI_API_KEY environment variable or provide it in the web interface.")
         
-    # Cascade list of fallback models in case the user has deprecated legacy model definitions in their sandbox
+    # Cascade list of fallback models in case of rate limits (429) or model deprecations
     models_to_try = [
         "gemini-2.5-flash",
+        "gemini-2.5-pro",
         "gemini-2.0-flash",
         "gemini-1.5-flash",
-        "gemini-1.5-pro"
+        "gemini-1.5-flash-8b",
+        "gemini-1.5-pro",
+        "gemini-1.5-flash-latest",
+        "gemini-1.5-pro-latest"
     ]
     
     # Instantiate the JSON output parser mapped directly to the Pydantic schema
