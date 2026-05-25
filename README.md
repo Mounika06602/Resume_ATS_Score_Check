@@ -38,9 +38,6 @@ resume-ats-score-check/
 ├── app.py                # FastAPI server entry point and API endpoints
 ├── analyzer.py           # Document parsing & Gemini LangChain logic
 ├── requirements.txt      # Python dependencies list
-├── test_backend.py       # Offline verification script for text extraction
-├── test_api.py           # API testing diagnostic script
-├── create_sample_resume.py # Generates test resumes and job descriptions
 └── README.md             # Project documentation (this file)
 ```
 
@@ -62,7 +59,6 @@ Create a `.env` file in the root directory (a template is provided) and paste yo
 ```env
 GEMINI_API_KEY=AIzaSyYourGeminiApiKeyHere
 PORT=5000
-FLASK_ENV=development
 ```
 *(You can get a free API key from [Google AI Studio](https://aistudio.google.com/))*
 
@@ -75,19 +71,9 @@ The server will start on **`http://127.0.0.1:5000`**.
 
 ---
 
-## 🧪 Verification & Testing
+## 🧪 Verification & Usage
 
-To test the application immediately, the project contains built-in mock assets:
-
-1. Run the helper generator:
-   ```bash
-   python create_sample_resume.py
-   ```
-   This generates a sample Word document `sample_resume.docx` and a job description text `sample_jd.txt` in the root directory.
-2. Run the offline test:
-   ```bash
-   python test_backend.py
-   ```
-   This verifies that the file parser extracts the names and database keywords correctly.
-3. Open **`http://127.0.0.1:5000`** in your browser.
-4. Drag and drop the generated `sample_resume.docx` into the document upload zone, paste the requirements from `sample_jd.txt` into the Job Description box, and click **Analyze Fit**.
+1. Open **`http://127.0.0.1:5000`** in your browser.
+2. Drag and drop any PDF, DOCX, or TXT resume file into the document upload zone.
+3. Paste the target job description requirements into the Job Description box.
+4. Click **Analyze Fit** to run the ATS score simulation and receive recommendations.
