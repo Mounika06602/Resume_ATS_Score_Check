@@ -15,9 +15,10 @@ if __name__ == '__main__':
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     sys.path.insert(0, project_root)
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 from app.api import routes
 
@@ -39,11 +40,17 @@ app.add_middleware(
 # Include the modular endpoint sub-router under the '/api' prefix
 app.include_router(routes.router, prefix="/api")
 
-# Mount the static directory to serve the frontend client HTML, CSS, and JS assets at '/'
-# We resolve the static folder path relative to the root folder (two levels up from this file)
-static_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(__file__)), "static"))
+# Mount the static directory to serve the frontend client CSS and JS assets at '/static'
+static_dir = os.path.join(os.path.dirname(__file__), "static")
 os.makedirs(static_dir, exist_ok=True)
-app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
+
+@app.get("/")
+async def serve_home(request: Request):
+    """Serves the main dashboard UI from the templates directory."""
+    return templates.TemplateResponse(request=request, name="index.html")
 
 if __name__ == '__main__':
     import uvicorn
@@ -55,7 +62,7 @@ if __name__ == '__main__':
     # Run the uvicorn development server
     uvicorn.run(
         "app.main:app",
-        host="0.0.0.0",
+        host="127.0.0.1",
         port=port,
         reload=True,
         reload_excludes=["venv", "venv/**/*", ".venv", ".venv/**/*"]
