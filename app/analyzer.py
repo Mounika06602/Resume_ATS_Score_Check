@@ -1,20 +1,21 @@
 """
-Resume parsing and AI evaluation engine using LangChain and Google Gemini.
+Resume evaluation engine using LangChain and Google Gemini.
 
-This module provides utility functions for extracting text from multiple document formats
-(PDF, DOCX, TXT) and handles the semantic analysis chain that benchmarks
-resume content against a target job description.
+This module resolves prompt orchestration and executes AI-powered resume analysis
+against a target job description. Document parsing is delegated to format-specific modules.
 """
 
 import os
-import pypdf
-import docx
 from typing import List, Dict, Any
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
+
+# Import document parsers
+from app import pdf_parser
+from app import docx_parser
 
 class ResumeAnalysis(BaseModel):
     """Pydantic schema representing the structured evaluation output of the ATS analysis."""
@@ -25,49 +26,14 @@ class ResumeAnalysis(BaseModel):
     improvement_suggestions: List[str] = Field(description="Specific, actionable suggestions to improve the resume format, experience description, or keyword inclusion to match the job description")
     recommendation_summary: str = Field(description="A concise summary evaluation of the candidate's fit and general recommendation")
 
-def extract_text_from_pdf(file_stream) -> str:
-    """Extract plain text from an in-memory PDF file stream."""
-    try:
-        reader = pypdf.PdfReader(file_stream)
-        text = ""
-        # Iterate over all pages and merge text blocks
-        for page in reader.pages:
-            page_text = page.extract_text()
-            if page_text:
-                text += page_text + "\n"
-        return text
-    except Exception as e:
-        raise ValueError(f"Error extracting text from PDF: {str(e)}")
-
-def extract_text_from_docx(file_stream) -> str:
-    """Extract plain text from an in-memory DOCX file stream including tables."""
-    try:
-        doc = docx.Document(file_stream)
-        text = ""
-        
-        # 1. Extract text content from paragraphs
-        for para in doc.paragraphs:
-            text += para.text + "\n"
-            
-        # 2. Extract text content from tables
-        for table in doc.tables:
-            for row in table.rows:
-                row_text = [cell.text.strip() for cell in row.cells if cell.text]
-                if row_text:
-                    text += " | ".join(row_text) + "\n"
-                    
-        return text
-    except Exception as e:
-        raise ValueError(f"Error extracting text from DOCX: {str(e)}")
-
 def extract_text(file_stream, filename: str) -> str:
-    """Detect extension and route file stream to correct parser."""
+    """Detect extension and route file stream to correct format parser."""
     ext = os.path.splitext(filename)[1].lower()
     
     if ext == '.pdf':
-        return extract_text_from_pdf(file_stream)
+        return pdf_parser.extract_text_from_pdf(file_stream)
     elif ext in ['.docx', '.doc']:
-        return extract_text_from_docx(file_stream)
+        return docx_parser.extract_text_from_docx(file_stream)
     elif ext in ['.txt', '.md']:
         try:
             # Read plain text files directly by decoding the byte content
@@ -144,12 +110,15 @@ def analyze_resume_vs_jd(resume_text: str, jd_text: str, api_key: str = None) ->
             print(f"Model {model_name} failed with error: {error_str}")
             last_error = e
             
-            # If the specific model variant isn't supported or not found in their account tier, move to the next model
-            if "not found" in error_str.lower() or "404" in error_str.lower() or "not supported" in error_str.lower():
-                continue
-            else:
-                # Fail immediately for authorization/billing/quota errors to notify the user
-                raise RuntimeError(f"Error during AI analysis ({model_name}): {error_str}")
+            # Check if this error is an API key validation or authentication failure to fail early
+            is_auth_error = any(kw in error_str.lower() for kw in ["api_key_invalid", "invalid api key", "invalid_key", "401", "unauthorized"])
+            
+            if is_auth_error:
+                raise RuntimeError(f"API Authentication failed ({model_name}): {error_str}")
+            
+            # For other errors (such as rate limits, quota exhaustion 429, 404, or model support limits),
+            # log and cascade fallback to the next model in the list
+            print(f"Cascading fallback to next model due to failure with {model_name}...")
+            continue
                 
     raise RuntimeError(f"All attempted Gemini models failed. Last error: {str(last_error)}")
-
